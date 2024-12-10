@@ -1,122 +1,207 @@
 package ModelLayer;
 
+import java.io.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
+class DecisionTree 
+{
+    private Node root;
+    private int maxDepth;
+    private int minSamplesSplit;
+    private int nFeatures;
 
+    public DecisionTree(int maxDepth, int minSamplesSplit, int nFeatures) {
+        this.maxDepth = maxDepth;
+        this.minSamplesSplit = minSamplesSplit;
+        this.nFeatures = nFeatures;
+    }
 
-	public class DecisionTree {
-	    private Node root;
+    public void fitFromFile(String filePath) {
+        try {
+            // Load data from the CSV file
+            List<List<String>> data = loadCsv(filePath);
 
-	    // Starts the tree building process using the provided dataset
-	    public void fit(List<Map<String, String>> data) {
-	        root = buildTree(data);
-	    }
+            // Separate features (X) and labels (y)
+            double[][] X = new double[data.size()][data.get(0).size() - 1];
+            int[] y = new int[data.size()];
 
-	    // Recursively builds the decision tree from the given data
-	    public Node buildTree(List<Map<String, String>> data) {
-	        if (data.isEmpty()) {
-	            return null;
-	        }
-	        if (isPure(data)) {
-	            return new Node(getMostCommonLabel(data));
-	        }
+            for (int i = 0; i < data.size(); i++) {
+                List<String> row = data.get(i);
+                for (int j = 0; j < row.size() - 1; j++) {
+                    X[i][j] = Double.parseDouble(row.get(j));
+                }
+                y[i] = Integer.parseInt(row.get(row.size() - 1)); // Last column is the label
+            }
 
-	        String bestFeature = "";
-	        double bestThreshold = 0;
-	        double bestImpurity = Double.MAX_VALUE;
+            // Train the model
+            fit(X, y);
+        } catch (IOException e) {
+            System.err.println("Error reading file: " + filePath);
+            e.printStackTrace();
+        }
+    }
 
-	        for (String feature : data.get(0).keySet()) {
-	            Set<Double> thresholds = new HashSet<>();
-	            for (Map<String, String> row : data) {
-	                thresholds.add(Double.parseDouble(row.get(feature)));
-	            }
+    private List<List<String>> loadCsv(String filePath) throws IOException {
+        List<List<String>> data = new ArrayList<>();
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] values = line.split(",");
+                data.add(Arrays.asList(values));
+            }
+        }
+        return data;
+    }
 
-	            for (double threshold : thresholds) {
-	                double impurity = calculateGiniImpurity(data, feature, threshold);
-	                if (impurity < bestImpurity) {
-	                    bestImpurity = impurity;
-	                    bestFeature = feature;
-	                    bestThreshold = threshold;
-	                }
-	            }
-	        }
+    void fit(double[][] X, int[] y) {
+        int nFeaturesAvailable = X[0].length;
+        nFeatures = nFeatures == 0 ? nFeaturesAvailable : Math.min(nFeatures, nFeaturesAvailable);
+        this.root = growTree(X, y, 0);
+    }
 
-	        List<Map<String, String>> leftSplit = new ArrayList<>();
-	        List<Map<String, String>> rightSplit = new ArrayList<>();
-	        for (Map<String, String> row : data) {
-	            if (Double.parseDouble(row.get(bestFeature)) < bestThreshold) {
-	                leftSplit.add(row);
-	            } else {
-	                rightSplit.add(row);
-	            }
-	        }
+    Node growTree(double[][] X, int[] y, int depth) {
+        int nSamples = X.length;
+        int nLabels = Arrays.stream(y).distinct().toArray().length;
 
-	        Node left = buildTree(leftSplit);
-	        Node right = buildTree(rightSplit);
+        // Stopping criteria
+        if (depth >= maxDepth || nLabels == 1 || nSamples < minSamplesSplit) {
+            return new Node(mostCommonLabel(y));
+        }
 
-	        return new Node(bestFeature, bestThreshold, left, right);
-	    }
+        // Randomly select features
+        Random rand = new Random();
+        Set<Integer> featureIndices = new HashSet<>();
+        while (featureIndices.size() < nFeatures) {
+            featureIndices.add(rand.nextInt(X[0].length));
+        }
 
-	    // Checks if all data points in a subset have the same label
-	    private boolean isPure(List<Map<String, String>> data) {
-	        String firstLabel = data.get(0).get("label");
-	        for (Map<String, String> row : data) {
-	            if (!row.get("label").equals(firstLabel)) {
-	                return false;
-	            }
-	        }
-	        return true;
-	    }
+        // Find the best split
+        int bestFeature = -1;
+        double bestThreshold = Double.NaN;
+        double bestGain = -1;
 
-	    // Determines the most common label in a subset of data
-	    private String getMostCommonLabel(List<Map<String, String>> data) {
-	        Map<String, Integer> labelCount = new HashMap<>();
-	        for (Map<String, String> row : data) {
-	            labelCount.put(row.get("label"), labelCount.getOrDefault(row.get("label"), 0) + 1);
-	        }
-	        return Collections.max(labelCount.entrySet(), Map.Entry.comparingByValue()).getKey();
-	    }
+        for (int feature : featureIndices) {
+            double[] thresholds = Arrays.stream(X).mapToDouble(row -> row[feature]).distinct().toArray();
+            for (double threshold : thresholds) {
+                double gain = informationGain(X, y, feature, threshold);
+                if (gain > bestGain) {
+                    bestGain = gain;
+                    bestFeature = feature;
+                    bestThreshold = threshold;
+                }
+            }
+        }
 
-	    // Calculates the Gini impurity for a potential split based on the given feature and threshold
-	    private double calculateGiniImpurity(List<Map<String, String>> data, String feature, double threshold) {
-	        List<String> leftLabels = new ArrayList<>();
-	        List<String> rightLabels = new ArrayList<>();
+        if (bestGain == -1) {
+            return new Node(mostCommonLabel(y));
+        }
 
-	        for (Map<String, String> row : data) {
-	            if (Double.parseDouble(row.get(feature)) < threshold) {
-	                leftLabels.add(row.get("label"));
-	            } else {
-	                rightLabels.add(row.get("label"));
-	            }
-	        }
+        // Split data
+        List<Integer> leftIndices = new ArrayList<>();
+        List<Integer> rightIndices = new ArrayList<>();
+        for (int i = 0; i < X.length; i++) {
+            if (X[i][bestFeature] <= bestThreshold) {
+                leftIndices.add(i);
+            } else {
+                rightIndices.add(i);
+            }
+        }
 
-	        return (calculateGini(leftLabels) * leftLabels.size() + calculateGini(rightLabels) * rightLabels.size()) / data.size();
-	    }
+        double[][] leftX = subsetRows(X, leftIndices);
+        int[] leftY = subsetArray(y, leftIndices);
+        double[][] rightX = subsetRows(X, rightIndices);
+        int[] rightY = subsetArray(y, rightIndices);
 
-	    // Computes the Gini impurity for a list of labels
-	    private double calculateGini(List<String> labels) {
-	        Map<String, Integer> labelCount = new HashMap<>();
-	        for (String label : labels) {
-	            labelCount.put(label, labelCount.getOrDefault(label, 0) + 1);
-	        }
-	        double impurity = 1.0;
-	        for (Integer count : labelCount.values()) {
-	            double p = count / (double) labels.size();
-	            impurity -= p * p;
-	        }
-	        return impurity;
-	    }
+        Node leftChild = growTree(leftX, leftY, depth + 1);
+        Node rightChild = growTree(rightX, rightY, depth + 1);
+        return new Node(bestFeature, bestThreshold, leftChild, rightChild);
+    }
 
-	    // Predicts the label for new data based on the constructed decision tree
-	    public String predict(Map<String, String> features) {
-	        Node node = root;
-	        while (!node.isLeafNode()) {
-	            if (Double.parseDouble(features.get(node.getFeature())) < node.getThreshold()) {
-	                node = node.getLeft();
-	            } else {
-	                node = node.getRight();
-	            }
-	        }
-	        return node.getValue();
-	    }
-	}
+    private double informationGain(double[][] X, int[] y, int feature, double threshold) {
+        double parentEntropy = entropy(y);
+
+        // Split data
+        List<Integer> leftIndices = new ArrayList<>();
+        List<Integer> rightIndices = new ArrayList<>();
+        for (int i = 0; i < X.length; i++) {
+            if (X[i][feature] <= threshold) {
+                leftIndices.add(i);
+            } else {
+                rightIndices.add(i);
+            }
+        }
+
+        if (leftIndices.isEmpty() || rightIndices.isEmpty()) {
+            return 0.0;
+        }
+
+        int[] leftY = subsetArray(y, leftIndices);
+        int[] rightY = subsetArray(y, rightIndices);
+        double leftWeight = (double) leftY.length / y.length;
+        double rightWeight = (double) rightY.length / y.length;
+
+        // Weighted entropy
+        double childEntropy = leftWeight * entropy(leftY) + rightWeight * entropy(rightY);
+        return parentEntropy - childEntropy;
+    }
+
+    private double entropy(int[] y) {
+        Map<Integer, Long> labelCounts = Arrays.stream(y)
+                .boxed()
+                .collect(Collectors.groupingBy(label -> label, Collectors.counting()));
+
+        double entropy = 0.0;
+        for (long count : labelCounts.values()) {
+            double p = (double) count / y.length;
+            entropy -= p * Math.log(p + 1e-9); // Add small value to prevent log(0)
+        }
+        return entropy;
+    }
+
+    private int mostCommonLabel(int[] y) {
+        return Arrays.stream(y)
+                .boxed()
+                .collect(Collectors.groupingBy(label -> label, Collectors.counting()))
+                .entrySet()
+                .stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey) // Safely map to the key
+                .orElse(-1); // Return a default value, like -1, if no labels are present
+    }
+
+    private double[][] subsetRows(double[][] X, List<Integer> indices) {
+        double[][] subset = new double[indices.size()][];
+        for (int i = 0; i < indices.size(); i++) {
+            subset[i] = X[indices.get(i)];
+        }
+        return subset;
+    }
+
+    private int[] subsetArray(int[] array, List<Integer> indices) {
+        int[] subset = new int[indices.size()];
+        for (int i = 0; i < indices.size(); i++) {
+            subset[i] = array[indices.get(i)];
+        }
+        return subset;
+    }
+
+    public int[] predict(double[][] X) {
+        return Arrays.stream(X)
+                .mapToInt(this::predictSingle)
+                .toArray();
+    }
+
+    private int predictSingle(double[] x) {
+        Node node = root;
+        while (!node.isLeafNode()) {
+            if (x[node.feature] <= node.threshold) {
+                node = node.left;
+            } else {
+                node = node.right;
+            }
+        }
+        return node.value;
+    }
+}
+
