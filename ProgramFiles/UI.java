@@ -1,50 +1,87 @@
-import javafx.stage.FileChooser;
-import javafx.stage.Stage;
-import javafx.scene.Scene;
-import javafx.scene.layout.VBox;
-import javafx.scene.control.*;
-import javafx.geometry.Pos;
-import javafx.geometry.Insets;
-import java.io.File;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class UI {
 
-    public void showUI(Stage stage) {
-        stage.setTitle("Excel Data Loader");
+    public static void main(String[] args) {
+        // Prompt user to start or quit
+        int choice = JOptionPane.showOptionDialog(null,
+                "Welcome to the Customer Data Input System. Would you like to start or quit?",
+                "Customer Churn System",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                new String[]{"Start", "Quit"},
+                "Start");
 
-        Label statusLabel = new Label("Select file containing customer data");
+        if (choice == JOptionPane.NO_OPTION || choice == JOptionPane.CLOSED_OPTION) {
+            System.exit(0);
+        }
 
-        // Create a FileChooser to allow the user to select an Excel file
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.getExtensionFilters().add(
-            new FileChooser.ExtensionFilter("Excel Files", "*.xls", "*.xlsx")
-        );
+        SwingUtilities.invokeLater(UI::createAndShowUI);
+    }
 
-        // Button to open the file chooser dialog
-        Button loadButton = new Button("Choose File");
+    private static void createAndShowUI() {
+        JFrame frame = new JFrame("Customer Data Input");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(600, 800);
+        frame.setLayout(new GridLayout(18, 2));
 
-        loadButton.setOnAction(e -> {
-            File file = fileChooser.showOpenDialog(stage);
-            if (file != null) {
-                // If the user selects a file, display success message
-                statusLabel.setText("FOUND \"" + file.getName() + "\", SUCCESSFUL LOADING OF DATA");
-            } else {
-                // If no file is selected, show this message
-                statusLabel.setText("No file selected.");
+        // Input labels and fields
+        String[] labels = {"Gender (m/f)", "Senior Citizen (Yes/No)", "Partner (Yes/No)", "Dependents (Yes/No)",
+                "Tenure", "Phone Service (Yes/No)", "Multiple Lines (Yes/No)", "Online Security (Yes/No)",
+                "Online Backup (Yes/No)", "Device Protection (Yes/No)", "Tech Support (Yes/No)",
+                "Streaming TV (Yes/No)", "Streaming Movies (Yes/No)", "Paperless Billing (Yes/No)",
+                "Monthly Charges", "Total Charges"};
+
+        JTextField[] textFields = new JTextField[labels.length];
+
+        for (int i = 0; i < labels.length; i++) {
+            JLabel label = new JLabel(labels[i]);
+            JTextField textField = new JTextField();
+            textFields[i] = textField;
+            frame.add(label);
+            frame.add(textField);
+        }
+
+        // Submit button
+        JButton submitButton = new JButton("Submit");
+        submitButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                boolean isComplete = true;
+
+                for (int i = 0; i < labels.length; i++) {
+                    String input = textFields[i].getText().trim();
+
+                    if (labels[i].contains("Yes/No")) {
+                        input = input.equalsIgnoreCase("yes") ? "1" : input.equalsIgnoreCase("no") ? "0" : input;
+                    } else if (labels[i].contains("Gender")) {
+                        input = input.equalsIgnoreCase("m") ? "1" : input.equalsIgnoreCase("f") ? "0" : input;
+                    }
+
+                    if (input.isEmpty() || (!labels[i].contains("Gender") && labels[i].contains("Yes/No") && !(input.equals("1") || input.equals("0")))) {
+                        isComplete = false;
+                        break;
+                    }
+                }
+
+                if (isComplete) {
+                    JOptionPane.showMessageDialog(frame, "Data successfully loaded: Please wait", "Success", JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(frame, "Incomplete data", "Error", JOptionPane.ERROR_MESSAGE);
+                }
             }
         });
 
-        // Layout for UI
-        VBox layout = new VBox(10, statusLabel, loadButton);
-        layout.setAlignment(Pos.CENTER);
-        layout.setPadding(new Insets(20));
+        frame.add(new JLabel()); // Placeholder for alignment
+        frame.add(submitButton);
 
-        Scene scene = new Scene(layout, 400, 200);
-        stage.setScene(scene);
-        stage.show();
+        frame.setVisible(true);
     }
 }
-
 
 
 
