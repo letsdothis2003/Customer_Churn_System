@@ -1,4 +1,4 @@
-This file is meant to use Random Forest Machine learning algorithm to detect Customer churn or how likely they are to leave/stop supposed of a company or bussiness.
+This file is meant to use Random Forest Machine learning algorithm to detect Customer churn or how likely they are to leave/stop support of a company or bussiness.
 People who collaborated to create this are: Fahim Tanvir, Ahmed Ali, Abul Hassan 
 
 User Guide:
