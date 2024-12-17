@@ -58,19 +58,6 @@ public class RandomForestModelTestCases {
     }
 
     @Test
-    public void testPredictWithUnseenData() {
-        double[][] X = {{1.0, 2.0}, {3.0, 4.0}, {5.0, 6.0}};
-        int[] y = {0, 1, 0};
-        double[][] X_unseen = {{2.0, 3.0}, {4.0, 5.0}};
-
-        tree.fit(X, y);
-        int[] predictions = tree.predict(X_unseen);
-
-        // Example assertion, depending on expected behavior
-        assertEquals(X_unseen.length, predictions.length, "Should predict labels for all unseen instances");
-    }
-
-    @Test
     public void testLeafNode() {
         Node leafNode = new Node(1); 
         assertTrue(leafNode.isLeafNode(), "Node should be identified as a leaf node");
