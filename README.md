@@ -17,6 +17,7 @@ You can run the Application immediately without the need for this step
 ![image](https://github.com/user-attachments/assets/3e84cd72-8443-4186-951d-9a3d66672e48)
 
 4. input the data of the customer you suspect will leave.
+   
     ![image](https://github.com/user-attachments/assets/3ea9a8b3-d27d-40b2-985b-c1a19648dea9)
 
 
@@ -24,7 +25,7 @@ You can run the Application immediately without the need for this step
    ![image](https://github.com/user-attachments/assets/e9d66257-3abd-4462-b507-6ec049e4cdb3)
 
 
-You have the option to enter new customer data again or close the program.
+6. You have the option to enter new customer data again or close the program.
 
 Planning For V 2.0
 For Version 2.0 of the app, we're making a change from using outside data analysis on most attributes that make the customers leave (provided in the Kaggle dataset) to using our own advanced machine learning method. This new method, called dot product similarity analysis, will help us understand and change the behavior of customers who might leave to be more like customers who stay and are loyal. This will also improve our accuracy as for Version 1.0, the accuracy ranges from 70-80, which is good but 90-100 is better. 
