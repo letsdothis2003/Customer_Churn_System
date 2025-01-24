@@ -13,7 +13,9 @@ You can run the Application immediately without the need for this step
 2.  After splitting the data, go to the Application Layer and run the program
 ![image](https://github.com/user-attachments/assets/2fe40a5b-a7aa-4988-952f-7a04369eafba)
 
-3. A screen will pop up
+3. A screen or GUI will pop up as seen here. 
+
+   
 ![image](https://github.com/user-attachments/assets/3e84cd72-8443-4186-951d-9a3d66672e48)
 
 4. input the data of the customer you suspect will leave.
