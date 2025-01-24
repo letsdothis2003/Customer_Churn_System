@@ -3,9 +3,8 @@ People who collaborated to create this are: Fahim Tanvir, Ahmed Ali, Abul Hassan
 
 
 
-Introduction:
 Purpose:
-This project aims to develop a model that predicts customer churn for a telecom company. Customer churn refers to when the customer is willing to leave the company by canceling their services or subscription. This prediction model will be trained on historical customer data to measure customer loyalty. By identifying patterns in the customers behavior, the company can take steps to retain customers that have a chance of leaving and improve the business model. 
+This project aims to develop a model that predicts customer churn for any company and subscription service. In out example, we will be using a telecom company. Customer churn refers to when the customer is willing to leave the company by canceling their services or subscription. This prediction model will be trained on historical customer data to measure customer loyalty. By identifying patterns in the customers behavior, the company can take steps to retain customers that have a chance of leaving and improve the business model. 
 
 Problem Statement:
 The telecom company is currently experiencing high rates of customer turnover, leading to significant revenue loss. Retaining existing customers can be cheaper for the company than attracting new ones and also implementing changes within business depending on what sections get churned the most. Essentially, churn prediction is critical for the company’s profitability. By implementing this system, the company will be able to take proactive measures to prevent churn.
@@ -14,8 +13,8 @@ This is the dataset we will be using:
 https://www.kaggle.com/datasets/blastchar/telco-customer-churn
 
 
-					User’s Guide
 
+Users Guide: 
  1. Go to the DataSet class in DataLayer. Run it for one time only to split the data into files
 Note: you don’t need to do it again anymore just for the first time you run the program.
 **After that it will be automatically saved in the new files 
