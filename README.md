@@ -1,9 +1,16 @@
+
+---------------------------------------------------------------
+Customer Churn System
+---------------------------------------------------------------
+
+
 This file is meant to use Random Forest Machine learning algorithm to detect Customer churn or how likely they are to leave/stop support of a company or bussiness.
-People who collaborated to create this are: Fahim Tanvir, Ahmed Ali, Abul Hassan 
+People who collaborated to create this are: Fahim Tanvir, Ahmed Ali, Abul Hassan. We all were committed to programming it in Java, unit testing it in Junit and documenting our journey in making this application. 
 
 
-
+---------------------------------------------------------------
 Purpose:
+---------------------------------------------------------------
 This project aims to develop a model that predicts customer churn for any company and subscription service. In out example, we will be using a telecom company. Customer churn refers to when the customer is willing to leave the company by canceling their services or subscription. This prediction model will be trained on historical customer data to measure customer loyalty. By identifying patterns in the customers behavior, the company can take steps to retain customers that have a chance of leaving and improve the business model. 
 
 Problem Statement:
@@ -13,8 +20,9 @@ This is the dataset we will be using:
 https://www.kaggle.com/datasets/blastchar/telco-customer-churn
 
 
-
+---------------------------------------------------------------
 Users Guide: 
+---------------------------------------------------------------
  1. Go to the DataSet class in DataLayer. Run it for one time only to split the data into files
 Note: you don’t need to do it again anymore just for the first time you run the program.
 **After that it will be automatically saved in the new files 
