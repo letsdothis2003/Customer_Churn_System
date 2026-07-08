@@ -73,8 +73,8 @@ public class RetentionStrategies {
         frame.add(mainPanel);
 
         // Load training and testing datasets
-        DataSet trainingDataSet = new DataSet("C:\\Users\\Admin\\eclipse-workspace\\RandomForest\\src\\DataLayer\\train_data.csv");
-        DataSet testingDataSet = new DataSet("C:\\Users\\Admin\\eclipse-workspace\\RandomForest\\src\\DataLayer\\test_data.csv");
+        DataSet trainingDataSet = new DataSet("train_data.csv");
+        DataSet testingDataSet = new DataSet("test_data.csv");
 
         // Extract data from the DataSet objects
         double[][] X_train = convertToDoubleArray(trainingDataSet.getData());

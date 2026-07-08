@@ -4,11 +4,16 @@ import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 public class DataSet {
     private List<List<String>> data;
@@ -23,7 +28,8 @@ public class DataSet {
     }
     //to load the main file
     private void loadCsv(String fileName) {
-        try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
+        String resolvedFileName = resolveFilePath(fileName);
+        try (BufferedReader br = new BufferedReader(new FileReader(resolvedFileName))) {
             String line;
             headers = new ArrayList<>();
             if ((line = br.readLine()) != null) {
@@ -162,13 +168,22 @@ public class DataSet {
         trainData = new ArrayList<>(data.subList(0, trainEnd));
         testData = new ArrayList<>(data.subList(testStart, total));
 
-        saveDataToFile(trainData, "C:\\Users\\Admin\\eclipse-workspace\\RandomForest\\src\\DataLayer\\train_data.csv");
-        saveDataToFile(testData, "C:\\Users\\Admin\\eclipse-workspace\\RandomForest\\src\\DataLayer\\test_data.csv");
+        saveDataToFile(trainData, "train_data.csv");
+        saveDataToFile(testData, "test_data.csv");
     }
 
     //save the data in the files after splitting
     private void saveDataToFile(List<List<String>> dataSet, String fileName) {
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(fileName))) {
+        Path outputPath = resolveOutputPath(fileName);
+        Path parent = outputPath.getParent();
+        if (parent != null) {
+            try {
+                Files.createDirectories(parent);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(outputPath.toFile()))) {
             bw.write(String.join(",", headers));
             bw.newLine();
             for (List<String> row : dataSet) {
@@ -180,9 +195,101 @@ public class DataSet {
         }
     }
 
+    private Path resolveOutputPath(String fileName) {
+        String resolved = resolveFilePath(fileName);
+        Path candidate = Paths.get(resolved);
+        if (Files.exists(candidate)) {
+            return candidate;
+        }
+        return resolveDataDirectory().resolve(fileName);
+    }
+
+    private Path resolveDataDirectory() {
+        for (Path root : getCandidateRoots()) {
+            Path dataLayer = root.resolve("ProgramFiles/src/DataLayer");
+            if (Files.isDirectory(dataLayer)) {
+                return dataLayer;
+            }
+            Path alternateDataLayer = root.resolve("ProgramFiles/DataLayer");
+            if (Files.isDirectory(alternateDataLayer)) {
+                return alternateDataLayer;
+            }
+            Path simpleDataLayer = root.resolve("DataLayer");
+            if (Files.isDirectory(simpleDataLayer)) {
+                return simpleDataLayer;
+            }
+        }
+        return Paths.get("").toAbsolutePath().resolve("ProgramFiles/src/DataLayer");
+    }
+
+    private String resolveFilePath(String fileName) {
+        if (fileName == null || fileName.trim().isEmpty()) {
+            throw new IllegalArgumentException("fileName cannot be empty");
+        }
+
+        Path inputPath = Paths.get(fileName);
+        if (inputPath.isAbsolute()) {
+            return Files.exists(inputPath) ? inputPath.toString() : fileName;
+        }
+
+        for (Path root : getCandidateRoots()) {
+            Path candidate = root.resolve(fileName);
+            if (Files.exists(candidate)) {
+                return candidate.toString();
+            }
+
+            Path dataLayerCandidate = root.resolve("ProgramFiles/src/DataLayer").resolve(fileName);
+            if (Files.exists(dataLayerCandidate)) {
+                return dataLayerCandidate.toString();
+            }
+
+            Path alternateDataLayerCandidate = root.resolve("ProgramFiles/DataLayer").resolve(fileName);
+            if (Files.exists(alternateDataLayerCandidate)) {
+                return alternateDataLayerCandidate.toString();
+            }
+
+            Path simpleDataLayerCandidate = root.resolve("DataLayer").resolve(fileName);
+            if (Files.exists(simpleDataLayerCandidate)) {
+                return simpleDataLayerCandidate.toString();
+            }
+        }
+
+        for (Path root : getCandidateRoots()) {
+            try (Stream<Path> stream = Files.walk(root)) {
+                Optional<Path> match = stream.filter(Files::isRegularFile)
+                        .filter(path -> path.getFileName().toString().equals(fileName))
+                        .findFirst();
+                if (match.isPresent()) {
+                    return match.get().toString();
+                }
+            } catch (IOException e) {
+                // Ignore and continue searching other roots.
+            }
+        }
+
+        return resolveDataDirectory().resolve(fileName).toString();
+    }
+
+    private List<Path> getCandidateRoots() {
+        List<Path> roots = new ArrayList<>();
+        Path current = Paths.get("").toAbsolutePath();
+        while (current != null) {
+            roots.add(current);
+            roots.add(current.resolve("ProgramFiles"));
+            roots.add(current.resolve("ProgramFiles/src"));
+            roots.add(current.resolve("ProgramFiles/bin"));
+            roots.add(current.resolve("DataLayer"));
+            if (Files.exists(current.resolve("README.md")) && Files.exists(current.resolve("ProgramFiles"))) {
+                break;
+            }
+            current = current.getParent();
+        }
+        return roots;
+    }
+
     public static void main(String[] args) {
     	//Just for operating the splitting and the imputaion
-        DataSet ds = new DataSet("C:\\Users\\Admin\\eclipse-workspace\\RandomForest\\src\\DataLayer\\DataFile (updated).csv");
+        DataSet ds = new DataSet("DataFile (updated).csv");
         ds.imputeData(); // Impute missing values
         ds.splitData(0.70); // 70% training, 30% testing
     }

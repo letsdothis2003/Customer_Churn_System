@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Customer Churn System
+Exec=/workspaces/Customer_Churn_System/appdir/run.sh
+Icon=applications-development
+Terminal=false
+Categories=Utility;Application;

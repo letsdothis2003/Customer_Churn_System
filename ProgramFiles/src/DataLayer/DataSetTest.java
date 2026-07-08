@@ -14,7 +14,7 @@ public class DataSetTest {
 
     @Before
     public void setUp() {
-        dataSet = new DataSet("C:\\Users\\Admin\\eclipse-workspace\\RandomForest\\src\\DataLayer\\DataFile (updated).csv");
+        dataSet = new DataSet("DataFile (updated).csv");
         // Prepare headers and data for tests
 
 
@@ -31,6 +31,14 @@ public class DataSetTest {
 
         assertEquals("Training data size should be 70", 70, dataSet.getTrainData().size());
         assertEquals("Testing data size should be 15", 30, dataSet.getTestData().size());
+    }
+
+    @Test
+    public void testLoadsDatasetByFilenameWithoutAbsolutePath() {
+        DataSet filenameOnlyDataSet = new DataSet("train_data.csv");
+
+        assertNotNull("Dataset should load when given a filename only", filenameOnlyDataSet.getData());
+        assertFalse("Dataset should contain rows when loading train_data.csv", filenameOnlyDataSet.getData().isEmpty());
     }
 
     @Test
